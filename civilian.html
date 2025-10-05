@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="utf-8" />
@@ -64,6 +64,7 @@
             <a href="#medicine" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Medicine</a>
             <a href="#shelter" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Shelter</a>
             <a href="#request" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Request</a>
+            <a href="index.html" id="mobile-logout-btn" class="mobile-link block py-2 px-6 text-sm text-red-500 hover:bg-red-50 font-semibold">Logout</a>
         </div>
     </header>
 
@@ -281,6 +282,14 @@
                             </div>
                         </form>
                     </div>
+
+                    <hr class="my-6">
+
+                    <div class="text-center">
+                        <button id="logout-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 w-full lg:w-auto">
+                            <i class="fa-solid fa-right-from-bracket mr-2"></i>Logout
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -331,16 +340,17 @@
     </footer>
 
     <script>
+    // Mock data moved to a scope accessible by initMap
+    const mockAlerts = [
+        { type: 'Flood Warning', severity: 'High', area: 'Downtown River Area', details: 'River expected to crest 5 feet above flood stage. Evacuate low-lying areas immediately.', icon: 'fa-house-flood-water', color: 'red', position: { lat: 12.8231, lng: 80.0449 }, radius: 1000 },
+        { type: 'Severe Thunderstorm', severity: 'Moderate', area: 'North Suburbs', details: 'Hail up to 1 inch and winds up to 60 mph possible. Seek shelter.', icon: 'fa-cloud-bolt', color: 'orange', position: { lat: 12.8350, lng: 80.0400 }, radius: 750 },
+        { type: 'Power Outage', severity: 'Low', area: 'Eastside District', details: 'Scheduled maintenance outage from 2 AM to 4 AM.', icon: 'fa-plug-circle-xmark', color: 'yellow', position: { lat: 12.8200, lng: 80.0550 }, radius: 300 },
+        { type: 'Earthquake Watch', severity: 'High', area: 'Citywide', details: 'Increased seismic activity detected.', icon: 'fa-house-crack', color: 'red', position: { lat: 12.8150, lng: 80.0350 }, radius: 1200 },
+    ];
+
     // Wait until DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
-        // Mock data (same as earlier demo)
-        const mockAlerts = [
-            { type: 'Flood Warning', severity: 'High', area: 'Downtown River Area', details: 'River expected to crest 5 feet above flood stage. Evacuate low-lying areas immediately.', icon: 'fa-house-flood-water', color: 'red', position: { lat: 12.8231, lng: 80.0449 }, radius: 1000 },
-            { type: 'Severe Thunderstorm', severity: 'Moderate', area: 'North Suburbs', details: 'Hail up to 1 inch and winds up to 60 mph possible. Seek shelter.', icon: 'fa-cloud-bolt', color: 'orange', position: { lat: 12.8350, lng: 80.0400 }, radius: 750 },
-            { type: 'Power Outage', severity: 'Low', area: 'Eastside District', details: 'Scheduled maintenance outage from 2 AM to 4 AM.', icon: 'fa-plug-circle-xmark', color: 'yellow', position: { lat: 12.8200, lng: 80.0550 }, radius: 300 },
-            { type: 'Earthquake Watch', severity: 'High', area: 'Citywide', details: 'Increased seismic activity detected.', icon: 'fa-house-crack', color: 'red', position: { lat: 12.8150, lng: 80.0350 }, radius: 1200 },
-        ];
-
+        // Mock data for other sections
         const mockWeather = [
             { day: 'Today', temp: '32°C', icon: 'fa-sun', condition: 'Sunny' },
             { day: 'Mon', temp: '31°C', icon: 'fa-cloud-sun', condition: 'Partly Cloudy' },
@@ -425,6 +435,10 @@
         const saveChangesBtn = document.getElementById('save-changes-btn');
         const desktopAvatar = document.getElementById('desktop-avatar');
         const mobileAvatar = document.getElementById('mobile-avatar');
+        
+        // logout refs
+        const logoutBtn = document.getElementById('logout-btn');
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
         // helper: safe element text set
         function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
@@ -508,10 +522,10 @@
             // directions link (requires userLocation)
             if (window.userLocation && item.position) {
                 modalDirectionsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${window.userLocation.lat},${window.userLocation.lng}&destination=${item.position.lat},${item.position.lng}`;
-                modalDirectionsBtn.classList.remove('opacity-50');
+                modalDirectionsBtn.classList.remove('opacity-50', 'pointer-events-none');
             } else {
                 modalDirectionsBtn.href = '#';
-                modalDirectionsBtn.classList.add('opacity-50');
+                modalDirectionsBtn.classList.add('opacity-50', 'pointer-events-none');
             }
 
             infoModal.classList.remove('hidden');
@@ -606,7 +620,11 @@
 
         // Event wiring
         mobileMenuButton?.addEventListener('click', ()=> mobileMenu.classList.toggle('hidden'));
-        mobileLinks?.forEach(l => l.addEventListener('click', ()=> mobileMenu.classList.add('hidden')));
+        mobileLinks?.forEach(l => l.addEventListener('click', ()=> {
+            if (!l.id.includes('logout')) { // don't hide menu for logout click, let page navigate
+                mobileMenu.classList.add('hidden');
+            }
+        }));
 
         // info modal events
         modalCloseBtn?.addEventListener('click', hideDetailsModal);
@@ -781,6 +799,16 @@
             locationDisplay.textContent = 'Location access denied.';
             locationModal.classList.add('hidden');
         });
+        
+        // logout handler
+        const handleLogout = (e) => {
+            e.preventDefault();
+            // In a real app, you would clear session data here before redirecting.
+            window.location.href = 'index.html';
+        };
+
+        logoutBtn?.addEventListener('click', handleLogout);
+        mobileLogoutBtn?.addEventListener('click', handleLogout);
 
         // click outside to close modals (already handled for info/profile)
         document.addEventListener('keydown', (e)=> {
@@ -793,17 +821,37 @@
     </script>
 
     <script>
-      // initMap is defined in the Google script callback if maps load. Provide a safe init in case google isn't available.
+      // initMap is defined in the Google script callback.
       function initMap() {
         try {
           const defaultLocation = { lat: 12.8231, lng: 80.0449 };
           const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 12 });
           window.mapInstance = map;
 
-          // Add demo circles for mockAlerts if desired (safe-guarded)
-          // (You can expand this to show markers from the mock data.)
+          // Define colors for severity levels
+          const severityColors = {
+              'High': '#FF0000',     // red
+              'Moderate': '#FFA500', // orange
+              'Low': '#FFFF00'      // yellow
+          };
+
+          // Draw circular danger zones for each alert
+          mockAlerts.forEach(alert => {
+              const alertCircle = new google.maps.Circle({
+                  strokeColor: severityColors[alert.severity] || '#808080', // default to gray
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: severityColors[alert.severity] || '#808080',
+                  fillOpacity: 0.35,
+                  map,
+                  center: alert.position,
+                  radius: alert.radius
+              });
+          });
+
         } catch (err) {
           console.warn('Google Maps failed to initialize:', err);
+          document.getElementById('map').innerHTML = `<div class="w-full h-full bg-gray-300 flex items-center justify-center"><p class="text-gray-600">Map could not be loaded.</p></div>`;
         }
       }
     </script>
