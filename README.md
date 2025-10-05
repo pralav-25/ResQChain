@@ -1,2 +1,0 @@
-# ResQChain
-Disaster Help System
