@@ -1,0 +1,812 @@
+<<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ResQChain — Fixed</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f4; }
+        #map { height: 100%; min-height: 50vh; }
+        .modal-overlay, #chatbot-window { transition: opacity .25s ease, transform .25s ease; }
+        .modal-content { transition: transform .25s ease; }
+        .chatbot-hidden { opacity: 0; transform: translateY(20px); pointer-events: none; }
+        /* header profile container */
+        #header-profile { position: absolute; right: 1rem; top: 0.75rem; transform: translateY(0.25rem); }
+        .avatar-shadow { box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body class="bg-stone-100">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-md fixed w-full top-0 z-50">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center relative">
+            <a href="#" class="flex items-center text-2xl font-bold text-stone-800">
+                <img src="logo.jpeg" alt="ResQChain Logo" class="h-10 w-10 mr-3 rounded-full" onerror="this.onerror=null;this.src='https://placehold.co/40x40/e2e8f0/64748b?text=RQ';">
+                ResQChain
+            </a>
+
+            <div class="hidden md:flex space-x-8 items-center absolute left-1/2 -translate-x-1/2">
+                <a href="#home" class="text-stone-700 hover:text-amber-600 font-bold">Home</a>
+                <a href="#weather" class="text-stone-700 hover:text-amber-600 font-bold">Weather</a>
+                <a href="#hospitals" class="text-stone-700 hover:text-amber-600 font-bold">Hospitals</a>
+                <a href="#medicine" class="text-stone-700 hover:text-amber-600 font-bold">Medicine</a>
+                <a href="#shelter" class="text-stone-700 hover:text-amber-600 font-bold">Shelter</a>
+                <a href="#request" class="text-stone-700 hover:text-amber-600 font-bold">Request</a>
+            </div>
+
+            <div id="header-profile" class="flex items-center relative">
+                <button id="profile-button" class="md:hidden text-stone-600 focus:outline-none mr-4 flex items-center" title="Open profile">
+                    <img id="mobile-avatar" src="https://placehold.co/40x40/e2e8f0/64748b?text=User" alt="Profile" class="h-10 w-10 rounded-full object-cover avatar-shadow">
+                    <span id="mobile-profile-name" class="ml-2 font-semibold">John Doe</span>
+                </button>
+
+                 <div class="hidden md:flex items-center">
+                    <button id="desktop-profile-button" class="flex items-center text-stone-600 focus:outline-none p-0" title="Open profile">
+                        <img id="desktop-avatar" src="https://placehold.co/40x40/e2e8f0/64748b?text=User" alt="Profile" class="h-11 w-11 rounded-full object-cover avatar-shadow border-2 border-white">
+                    </button>
+                    <span id="desktop-profile-name" class="ml-2 font-semibold">John Doe</span>
+                </div>
+
+                <button id="mobile-menu-button" class="md:hidden text-stone-600 focus:outline-none ml-3" aria-label="Open menu">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white">
+            <a href="#home" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Home</a>
+            <a href="#weather" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Weather Forecast</a>
+            <a href="#hospitals" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Hospitals</a>
+            <a href="#medicine" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Medicine</a>
+            <a href="#shelter" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Shelter</a>
+            <a href="#request" class="mobile-link block py-2 px-6 text-sm text-stone-700 hover:bg-stone-100">Request</a>
+        </div>
+    </header>
+
+    <main class="pt-16">
+
+        <div id="location-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] p-4">
+            <div class="modal-content bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full text-center transform scale-95">
+                <i class="fa-solid fa-map-marker-alt text-5xl text-amber-500 mb-4"></i>
+                <h2 class="text-2xl font-bold text-stone-800 mb-2">Share Your Location</h2>
+                <p class="text-stone-600 mb-6">Please allow location access to get localized alerts and directions.</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="allow-location" class="bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700">Allow Access</button>
+                    <button id="deny-location" class="bg-gray-300 text-stone-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-400">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+
+        <section id="home" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-stone-800 mb-4">Stay Informed, Stay Safe</h1>
+                <p class="text-lg text-stone-600 max-w-3xl mx-auto mb-12">Your central hub for critical information during emergencies.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <a href="#weather" class="bg-stone-50 p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                        <i class="fa-solid fa-cloud-sun-rain text-4xl text-sky-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-2">Weather Forecasts</h3>
+                        <p class="text-stone-600">10-day weather predictions.</p>
+                    </a>
+                    <a href="#hospitals" class="bg-stone-50 p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                        <i class="fa-solid fa-hospital text-4xl text-rose-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-2">Nearby Hospitals</h3>
+                        <p class="text-stone-600">Find hospitals and services.</p>
+                    </a>
+                    <a href="#medicine" class="bg-stone-50 p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                        <i class="fa-solid fa-pills text-4xl text-emerald-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-2">Medicine Shops</h3>
+                        <p class="text-stone-600">Locate pharmacies.</p>
+                    </a>
+                    <a href="#shelter" class="bg-stone-50 p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                        <i class="fa-solid fa-house-chimney-user text-4xl text-amber-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-2">Safe Shelters</h3>
+                        <p class="text-stone-600">Find nearby shelters.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="alerts-map" class="py-20 bg-cover bg-center relative" style="background-image: url('bg1.jpg');">
+            <div class="absolute inset-0 bg-black opacity-50"></div>
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-white">Live Alerts & Safe Zones</h2>
+                    <p class="text-stone-300 mt-2">Current location: <span id="location-display" class="font-semibold text-amber-400">Awaiting Access...</span></p>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="lg:w-1/3 bg-white/90 p-6 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-4 border-b pb-2">Alerts in Your Area</h3>
+                        <div id="alerts-container" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div>
+                    </div>
+                    <div class="lg:w-2/3 h-[70vh] rounded-xl shadow-lg border-4 border-white bg-gray-200">
+                        <div id="map" style="height:100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="weather" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">10-Day Weather Forecast</h2>
+                <div id="weather-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6"></div>
+            </div>
+        </section>
+        
+        <div class="bg-cover bg-center relative" style="background-image: url('bg2.jpg');">
+            <div class="absolute inset-0 bg-black opacity-60"></div>
+            <div class="relative">
+                <section id="hospitals" class="py-20">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-3xl font-bold text-white mb-4 text-center">Nearby Medical Facilities</h2>
+                        <div id="hospitals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <section id="medicine" class="py-20 bg-sky-100">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4 text-center">Medicine Availability</h2>
+                <div id="medicine-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            </div>
+        </section>
+
+        <div class="bg-cover bg-center relative" style="background-image: url('bg2.jpg');">
+            <div class="absolute inset-0 bg-black opacity-60"></div>
+            <div class="relative">
+                <section id="shelter" class="py-20">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-3xl font-bold text-white mb-4 text-center">Emergency Shelters</h2>
+                        <div id="shelter-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+
+        <section id="request" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4 text-center">Request Assistance</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div id="livelihood" class="bg-stone-50 p-8 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold mb-6"><i class="fa-solid fa-shopping-basket mr-3 text-amber-500"></i>Livelihood Needs</h3>
+                        <form id="livelihood-form" class="space-y-4">
+                            <label class="block"><span class="text-sm text-stone-700">Full Name</span><input id="livelihood-name" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="John Doe"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Address</span><input id="livelihood-address" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="kattankulathur,chennai"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Phone</span><input id="livelihood-phone" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="+91 1234567890"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Select Shelter</span>
+                                <select id="livelihood-shelter-select" class="mt-1 block w-full p-2.5 rounded-lg border"><option>Choose a shelter...</option></select>
+                            </label>
+                            <div>
+                                <label class="block mb-2 text-sm text-stone-700">Required Items</label>
+                                <div id="livelihood-items-container" class="space-y-2"></div>
+                                <button type="button" id="add-livelihood-item" class="mt-2 text-amber-600">+ Add Item</button>
+                            </div>
+                            <button type="submit" class="w-full bg-amber-600 text-white py-2.5 rounded-lg">Submit Request</button>
+                        </form>
+                    </div>
+
+                    <div id="medical" class="bg-stone-50 p-8 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold mb-6"><i class="fa-solid fa-briefcase-medical mr-3 text-rose-500"></i>Medical Needs</h3>
+                        <form id="medical-form" class="space-y-4">
+                            <label class="block"><span class="text-sm text-stone-700">Full Name</span><input id="medical-name" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="Jane Doe"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Address</span><input id="medical-address" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="kattankulathur,chennai"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Phone</span><input id="medical-phone" required class="mt-1 block w-full p-2.5 rounded-lg border" placeholder="+91 1234567890"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Select Shelter</span>
+                                <select id="medical-shelter-select" class="mt-1 block w-full p-2.5 rounded-lg border"><option>Choose a shelter...</option></select>
+                            </label>
+                            <div>
+                                <label class="block mb-2 text-sm text-stone-700">Required Items</label>
+                                <div id="medical-items-container" class="space-y-2"></div>
+                                <button type="button" id="add-medical-item" class="mt-2 text-rose-600">+ Add Item</button>
+                            </div>
+                            <button type="submit" class="w-full bg-rose-600 text-white py-2.5 rounded-lg">Submit Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] p-4 hidden">
+        <div class="modal-content bg-stone-200 rounded-lg shadow-2xl p-8 max-w-4xl w-full transform scale-95 relative">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-stone-800">Your Profile</h2>
+                <p class="text-stone-600">Manage your information and settings.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="relative inline-block">
+                        <img id="profile-picture" src="https://placehold.co/128x128/e2e8f0/64748b?text=User" class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white" alt="Profile">
+                        <label for="profile-picture-upload" class="absolute bottom-0 right-0 bg-amber-600 text-white w-9 h-9 rounded-full flex items-center justify-center cursor-pointer hover:bg-amber-700">
+                            <i class="fa-solid fa-camera"></i>
+                            <input id="profile-picture-upload" type="file" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+                    <h3 id="profile-display-name" class="mt-4 text-2xl font-bold">John Doe</h3>
+                    <p id="profile-display-address" class="text-stone-600">Kattankulathur, Chennai</p>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow">
+                    <div id="view-profile-info">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-xl font-bold">Personal Information</h4>
+                            <button id="edit-profile-btn" class="text-amber-600"><i class="fa-solid fa-pencil mr-1"></i>Edit</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-stone-500">Full Name</label>
+                                <p id="info-name" class="text-lg text-stone-800">John Doe</p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-stone-500">Address</label>
+                                <p id="info-address" class="text-lg text-stone-800">Kattankulathur, Chennai</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="edit-profile-form" class="hidden">
+                        <h4 class="text-xl font-bold mb-3">Edit Information</h4>
+                        <form id="profile-form" class="space-y-3">
+                            <label class="block"><span class="text-sm text-stone-700">Full Name</span>
+                                <input id="profile-name" value="John Doe" class="mt-1 block w-full p-2.5 rounded-lg border"></label>
+                            <label class="block"><span class="text-sm text-stone-700">Address</span>
+                                <input id="profile-address" value="Kattankulathur, Chennai" class="mt-1 block w-full p-2.5 rounded-lg border"></label>
+
+                            <div class="flex justify-end gap-3 mt-2">
+                                <button type="button" id="cancel-edit-btn" class="px-4 py-2 border rounded">Cancel</button>
+                                <button type="button" id="apply-edit-btn" class="px-4 py-2 bg-amber-600 text-white rounded">Apply</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <hr class="my-6">
+
+                    <div>
+                        <h4 class="text-xl font-bold mb-3">Change Password</h4>
+                        <form id="password-form" class="space-y-3">
+                            <label class="block"><span class="text-sm text-stone-700">Current Password</span>
+                                <input id="current-password" type="password" class="mt-1 block w-full p-2.5 rounded-lg border"></label>
+                            <label class="block"><span class="text-sm text-stone-700">New Password</span>
+                                <input id="new-password" type="password" class="mt-1 block w-full p-2.5 rounded-lg border"></label>
+                            <div class="flex justify-end">
+                                <button id="change-password-btn" type="button" class="px-4 py-2 bg-amber-600 text-white rounded">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-right">
+                <button id="save-changes-btn" class="hidden bg-amber-600 text-white px-4 py-2 rounded">Save Changes</button>
+            </div>
+
+            <button id="profile-modal-close-btn" class="absolute top-4 right-4 text-2xl text-stone-500">×</button>
+        </div>
+    </div>
+
+    <div id="info-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] p-4 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-lg w-full transform scale-95">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-2xl font-bold text-stone-800">Details</h3>
+                <button id="modal-close-btn" class="text-stone-500 text-2xl">×</button>
+            </div>
+            <div id="modal-body" class="p-6"></div>
+            <div class="flex justify-end p-4 bg-stone-50 rounded-b-lg">
+                <a id="modal-directions-btn" href="#" target="_blank" class="bg-amber-600 text-white px-4 py-2 rounded">Get Directions</a>
+            </div>
+        </div>
+    </div>
+
+    <button id="chatbot-toggle" class="fixed bottom-8 right-8 bg-amber-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-[60] hover:bg-amber-700">
+        <i class="fa-solid fa-comment-dots"></i>
+    </button>
+
+    <div id="chatbot-window" class="fixed bottom-28 right-8 w-full max-w-sm bg-white rounded-xl shadow-2xl z-[60] chatbot-hidden flex flex-col max-h-[80vh]">
+        <div class="flex justify-between items-center bg-amber-600 text-white p-4 rounded-t-xl">
+            <h3 class="font-bold">ResQBot Assistant</h3>
+            <button id="chatbot-close-btn" class="text-white text-2xl">×</button>
+        </div>
+        <div id="chatbot-messages" class="p-4 flex-1 overflow-y-auto space-y-4"></div>
+        <div class="p-4 border-t">
+            <div id="chatbot-presets" class="mb-3 space-y-2"></div>
+            <form id="chatbot-form" class="flex gap-2">
+                <input id="chatbot-input" class="flex-1 border rounded px-3 py-2" placeholder="Type your message..." />
+                <button class="bg-amber-600 text-white px-4 py-2 rounded" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-stone-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p>© 2025 ResQChain. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+    // Wait until DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        // Mock data (same as earlier demo)
+        const mockAlerts = [
+            { type: 'Flood Warning', severity: 'High', area: 'Downtown River Area', details: 'River expected to crest 5 feet above flood stage. Evacuate low-lying areas immediately.', icon: 'fa-house-flood-water', color: 'red', position: { lat: 12.8231, lng: 80.0449 }, radius: 1000 },
+            { type: 'Severe Thunderstorm', severity: 'Moderate', area: 'North Suburbs', details: 'Hail up to 1 inch and winds up to 60 mph possible. Seek shelter.', icon: 'fa-cloud-bolt', color: 'orange', position: { lat: 12.8350, lng: 80.0400 }, radius: 750 },
+            { type: 'Power Outage', severity: 'Low', area: 'Eastside District', details: 'Scheduled maintenance outage from 2 AM to 4 AM.', icon: 'fa-plug-circle-xmark', color: 'yellow', position: { lat: 12.8200, lng: 80.0550 }, radius: 300 },
+            { type: 'Earthquake Watch', severity: 'High', area: 'Citywide', details: 'Increased seismic activity detected.', icon: 'fa-house-crack', color: 'red', position: { lat: 12.8150, lng: 80.0350 }, radius: 1200 },
+        ];
+
+        const mockWeather = [
+            { day: 'Today', temp: '32°C', icon: 'fa-sun', condition: 'Sunny' },
+            { day: 'Mon', temp: '31°C', icon: 'fa-cloud-sun', condition: 'Partly Cloudy' },
+            { day: 'Tue', temp: '29°C', icon: 'fa-cloud-showers-heavy', condition: 'Rain' },
+            { day: 'Wed', temp: '30°C', icon: 'fa-cloud-bolt', condition: 'Thunderstorm' },
+            { day: 'Thu', temp: '33°C', icon: 'fa-sun', condition: 'Sunny' },
+            { day: 'Fri', temp: '34°C', icon: 'fa-sun', condition: 'Sunny' },
+            { day: 'Sat', temp: '32°C', icon: 'fa-cloud-sun', condition: 'Partly Cloudy' },
+            { day: 'Sun', temp: '29°C', icon: 'fa-cloud-showers-heavy', condition: 'Rain' },
+            { day: 'Next Mon', temp: '31°C', icon: 'fa-sun', condition: 'Sunny' },
+            { day: 'Next Tue', temp: '33°C', icon: 'fa-sun', condition: 'Sunny' },
+        ];
+
+        const mockHospitals = [
+            { name: 'SRM General Hospital', distance: '1.5 km', beds: 500, vacant: 75, facilities: ['ICU','Emergency'], phone: '044-2745-2270', position: { lat:12.8235,lng:80.0445 } },
+            { name: 'Chettinad Hospital', distance: '8.1 km', beds: 1200, vacant: 250, facilities: ['Multi-specialty'], phone: '044-4741-1000', position:{ lat:12.8901,lng:80.2154 } },
+            { name: 'Annai Arul Hospital', distance: '10.8 km', beds: 100, vacant: 20, facilities: ['Emergency'], phone: '044-2275-0255', position:{ lat:12.8633,lng:80.0789 } },
+        ];
+
+        const mockMedicineShops = [
+            { name: 'SRM Pharmacy', distance:'1.2 km', open:'24 Hours', available:['Painkillers','Antibiotics'], position:{lat:12.8240,lng:80.0455} },
+            { name: 'Apollo Pharmacy', distance:'3.0 km', open:'8 AM - 10 PM', available:['Insulin','Bandages'], position:{lat:12.8400,lng:80.0500} },
+            { name: 'MedPlus Potheri', distance:'4.5 km', open:'9 AM - 9 PM', available:['Vitamins','Painkillers'], position:{lat:12.8300,lng:80.0480} },
+        ];
+
+        const mockShelters = [
+            { name:'Community Hall Guduvancheri', distance:'5.2 km', capacity:200, current:80, supplies:['Food','Water'], position:{lat:12.85,lng:80.06} },
+            { name:'SRM University Campus', distance:'1.5 km', capacity:1000, current:150, supplies:['Food','Medical Aid'], position:{lat:12.8231,lng:80.0449} },
+            { name:'Potheri Govt. School', distance:'4.1 km', capacity:300, current:40, supplies:['Beds','Water'], position:{lat:12.8310,lng:80.0495} },
+        ];
+
+        // DOM refs
+        const locationModal = document.getElementById('location-modal');
+        const allowLocationBtn = document.getElementById('allow-location');
+        const denyLocationBtn = document.getElementById('deny-location');
+        const locationDisplay = document.getElementById('location-display');
+
+        const alertsContainer = document.getElementById('alerts-container');
+        const weatherContainer = document.getElementById('weather-container');
+        const hospitalsContainer = document.getElementById('hospitals-container');
+        const medicineContainer = document.getElementById('medicine-container');
+        const shelterContainer = document.getElementById('shelter-container');
+
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        const infoModal = document.getElementById('info-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalDirectionsBtn = document.getElementById('modal-directions-btn');
+
+        const livelihoodForm = document.getElementById('livelihood-form');
+        const medicalForm = document.getElementById('medical-form');
+        const livelihoodSelect = document.getElementById('livelihood-shelter-select');
+        const medicalSelect = document.getElementById('medical-shelter-select');
+
+        // chatbot refs
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const chatbotCloseBtn = document.getElementById('chatbot-close-btn');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const chatbotForm = document.getElementById('chatbot-form');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotPresets = document.getElementById('chatbot-presets');
+
+        // profile refs
+        const profileModal = document.getElementById('profile-modal');
+        const profileButton = document.getElementById('profile-button');
+        const desktopProfileButton = document.getElementById('desktop-profile-button');
+        const profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
+        const profilePictureUpload = document.getElementById('profile-picture-upload');
+        const profilePicture = document.getElementById('profile-picture');
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const applyEditBtn = document.getElementById('apply-edit-btn');
+        const viewProfileInfo = document.getElementById('view-profile-info');
+        const editProfileForm = document.getElementById('edit-profile-form');
+        const profileForm = document.getElementById('profile-form');
+        const passwordForm = document.getElementById('password-form');
+        const saveChangesBtn = document.getElementById('save-changes-btn');
+        const desktopAvatar = document.getElementById('desktop-avatar');
+        const mobileAvatar = document.getElementById('mobile-avatar');
+
+        // helper: safe element text set
+        function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+
+        // populate UI sections
+        function populateData() {
+            // alerts
+            alertsContainer.innerHTML = mockAlerts.map(a => {
+                return `
+                <div class="p-4 rounded-lg bg-white shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 text-center"><i class="fa-solid ${a.icon} text-xl text-red-500"></i></div>
+                        <div>
+                            <div class="font-bold text-stone-800">${a.type} <span class="text-sm font-medium text-stone-600">(${a.severity})</span></div>
+                            <div class="text-sm text-stone-600">${a.area}</div>
+                            <div class="text-sm text-stone-500 mt-1">${a.details}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // weather
+            weatherContainer.innerHTML = mockWeather.map(w => `
+                <div class="bg-stone-50 rounded-xl p-4 text-center shadow">
+                    <div class="font-bold">${w.day}</div>
+                    <div class="my-2"><i class="fa-solid ${w.icon} text-3xl"></i></div>
+                    <div class="text-2xl font-semibold">${w.temp}</div>
+                    <div class="text-sm text-stone-500">${w.condition}</div>
+                </div>
+            `).join('');
+
+            // hospitals
+            hospitalsContainer.innerHTML = mockHospitals.map((h,i) => `
+                <button data-type="hospital" data-index="${i}" class="info-card w-full text-left bg-white/90 p-4 rounded-lg shadow">
+                    <div class="font-bold text-stone-800">${h.name}</div>
+                    <div class="text-sm text-stone-500">${h.distance}</div>
+                    <div class="text-sm mt-2 text-stone-700">Vacant: <span class="font-semibold">${h.vacant}</span></div>
+                </button>
+            `).join('');
+
+            // medicine
+            medicineContainer.innerHTML = mockMedicineShops.map((m,i) => `
+                <button data-type="medicine" data-index="${i}" class="info-card w-full text-left bg-white p-4 rounded-lg shadow">
+                    <div class="font-bold">${m.name}</div>
+                    <div class="text-sm text-stone-500">${m.distance}</div>
+                    <div class="text-sm mt-2 text-stone-700">Open: ${m.open}</div>
+                </button>
+            `).join('');
+
+            // shelters
+            shelterContainer.innerHTML = mockShelters.map((s,i) => `
+                <button data-type="shelter" data-index="${i}" class="info-card w-full text-left bg-white/90 p-4 rounded-lg shadow">
+                    <div class="font-bold">${s.name}</div>
+                    <div class="text-sm text-stone-500">${s.distance}</div>
+                    <div class="text-sm mt-2 text-stone-700">Cap: ${s.current}/${s.capacity}</div>
+                </button>
+            `).join('');
+
+            // populate selects
+            mockShelters.forEach(s => {
+                const o1 = document.createElement('option'); o1.value = s.name; o1.textContent = s.name;
+                const o2 = o1.cloneNode(true);
+                if (livelihoodSelect) livelihoodSelect.appendChild(o1);
+                if (medicalSelect) medicalSelect.appendChild(o2);
+            });
+        }
+
+        // details modal
+        function showDetailsModal(item, type) {
+            modalTitle.textContent = item.name || 'Details';
+            let body = '';
+            if (type === 'hospital') {
+                body = `<p class="text-sm text-stone-600">${item.distance} away</p><p class="mt-2">${item.facilities.join(', ')}</p><p class="mt-2">Phone: ${item.phone}</p>`;
+            } else if (type === 'medicine') {
+                body = `<p class="text-sm text-stone-600">${item.distance} away</p><p class="mt-2">Open: ${item.open}</p><p class="mt-2">Available: ${item.available.join(', ')}</p>`;
+            } else if (type === 'shelter') {
+                body = `<p class="text-sm text-stone-600">${item.distance} away</p><p class="mt-2">Capacity: ${item.current}/${item.capacity}</p><p class="mt-2">Supplies: ${item.supplies.join(', ')}</p>`;
+            }
+            modalBody.innerHTML = body;
+
+            // directions link (requires userLocation)
+            if (window.userLocation && item.position) {
+                modalDirectionsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${window.userLocation.lat},${window.userLocation.lng}&destination=${item.position.lat},${item.position.lng}`;
+                modalDirectionsBtn.classList.remove('opacity-50');
+            } else {
+                modalDirectionsBtn.href = '#';
+                modalDirectionsBtn.classList.add('opacity-50');
+            }
+
+            infoModal.classList.remove('hidden');
+            setTimeout(() => infoModal.querySelector('.modal-content').classList.replace('scale-95','scale-100'), 10);
+        }
+
+        function hideDetailsModal() {
+            const content = infoModal.querySelector('.modal-content');
+            if (!content) return;
+            content.classList.replace('scale-100','scale-95');
+            setTimeout(()=> infoModal.classList.add('hidden'), 250);
+        }
+
+        // small helpers for dynamic form items
+        function createItemInput(container) {
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center';
+            row.innerHTML = `<input class="flex-1 p-2.5 border rounded" placeholder="Item name"><input type="number" min="1" class="w-24 p-2.5 border rounded" placeholder="Qty"><button type="button" class="text-red-500 remove">×</button>`;
+            container.appendChild(row);
+            row.querySelector('.remove').addEventListener('click', ()=> row.remove());
+        }
+
+        // forms
+        function handleFormSubmit(e){
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.textContent = 'Submitted!';
+                btn.disabled = true;
+                setTimeout(()=> { btn.innerHTML = orig; btn.disabled = false; e.target.reset(); const dyn = e.target.querySelector('.space-y-2'); if(dyn) dyn.innerHTML=''; }, 1500);
+            }
+        }
+
+        // --- CHATBOT LOGIC ---
+        const botResponses = {
+            'how do i find a nearby shelter?': 'Go to the Shelter section and click a card for details.',
+            'what is the weather forecast?': "You can find a detailed 10-day forecast in the 'Weather' section of the page.",
+            'how can i request medical supplies?': "Please use the 'Medical Needs' form in the 'Request Assistance' section to request specific medical items.",
+            'are there any flood warnings?': "Check the 'Live Alerts & Safe Zones' section for real-time warnings and information specific to your area.",
+            'show me the nearest hospital.': "The 'Nearby Hospitals' section lists medical facilities. Click on any hospital to see details and get directions.",
+            'what is resqchain?': 'ResQChain is a disaster management hub.',
+            'what should i do during a flood?': 'Move to higher ground and follow local instructions.',
+            'how can i request supplies?': 'Use the Request forms on the page.',
+            'default': "Sorry, I don't know that. Try another question."
+        };
+
+        const presetQuestions = [
+            'How do I find a nearby shelter?',
+            'What is the weather forecast?',
+            'How can I request medical supplies?',
+            'Are there any flood warnings?',
+            'Show me the nearest hospital.'
+        ];
+
+        function addMessage(msg, sender = 'bot') {
+            const el = document.createElement('div');
+            el.className = sender === 'user' ? 'self-end bg-amber-100 p-3 rounded-xl max-w-xs' : 'self-start bg-stone-200 p-3 rounded-xl max-w-xs';
+            el.textContent = msg;
+            chatbotMessages.appendChild(el);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        function handlePresetClick(e) {
+            const question = e.target.textContent;
+            addMessage(question, 'user');
+            chatbotPresets.innerHTML = ''; // Hide presets immediately
+            setTimeout(() => {
+                const resp = botResponses[question.toLowerCase()] || botResponses['default'];
+                addMessage(resp, 'bot');
+                renderPresetQuestions(); // Show presets again after bot responds
+            }, 700);
+        }
+
+        function renderPresetQuestions() {
+            if (!chatbotPresets) return;
+            chatbotPresets.innerHTML = presetQuestions.map(q => 
+                `<button class="w-full p-2 text-left text-sm bg-stone-100 rounded hover:bg-stone-200 transition">${q}</button>`
+            ).join('');
+            chatbotPresets.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', handlePresetClick);
+            });
+        }
+        // --- END CHATBOT LOGIC ---
+
+        // populate initial UI
+        populateData();
+        addMessage("Hello! I'm ResQBot. How can I help you today?", 'bot');
+        renderPresetQuestions();
+
+
+        // Event wiring
+        mobileMenuButton?.addEventListener('click', ()=> mobileMenu.classList.toggle('hidden'));
+        mobileLinks?.forEach(l => l.addEventListener('click', ()=> mobileMenu.classList.add('hidden')));
+
+        // info modal events
+        modalCloseBtn?.addEventListener('click', hideDetailsModal);
+        infoModal?.addEventListener('click', (e)=> { if (e.target === infoModal) hideDetailsModal(); });
+
+        // card click to show details
+        document.body.addEventListener('click', (e)=> {
+            const card = e.target.closest('.info-card');
+            if (!card) return;
+            const type = card.dataset.type;
+            const index = parseInt(card.dataset.index,10);
+            if (type==='hospital') showDetailsModal(mockHospitals[index], 'hospital');
+            if (type==='medicine') showDetailsModal(mockMedicineShops[index], 'medicine');
+            if (type==='shelter') showDetailsModal(mockShelters[index], 'shelter');
+        });
+
+        // request form dynamics
+        document.getElementById('add-livelihood-item')?.addEventListener('click', ()=> createItemInput(document.getElementById('livelihood-items-container')));
+        document.getElementById('add-medical-item')?.addEventListener('click', ()=> createItemInput(document.getElementById('medical-items-container')));
+        livelihoodForm?.addEventListener('submit', handleFormSubmit);
+        medicalForm?.addEventListener('submit', handleFormSubmit);
+
+        // chatbot events
+        chatbotToggle?.addEventListener('click', ()=> chatbotWindow.classList.toggle('chatbot-hidden'));
+        chatbotCloseBtn?.addEventListener('click', ()=> chatbotWindow.classList.toggle('chatbot-hidden'));
+        chatbotForm?.addEventListener('submit', (e)=> {
+            e.preventDefault();
+            const text = chatbotInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            chatbotInput.value = '';
+            chatbotPresets.innerHTML = ''; // Hide presets when user types
+            setTimeout(()=> {
+                const resp = botResponses[text.toLowerCase()] || botResponses['default'];
+                addMessage(resp, 'bot');
+                renderPresetQuestions(); // Show presets again
+            }, 700);
+        });
+
+        // profile: open/close
+        function openProfileModal() {
+            // store original values (for cancel)
+            window.__profileOriginal = {
+                name: document.getElementById('info-name')?.textContent || '',
+                address: document.getElementById('info-address')?.textContent || '',
+                picture: profilePicture.src
+            };
+            profileModal.classList.remove('hidden');
+            setTimeout(()=> profileModal.querySelector('.modal-content')?.classList.replace('scale-95','scale-100'), 10);
+        }
+        function closeProfileModal(revert=false) {
+            if (revert && window.__profileOriginal) {
+                document.getElementById('profile-name').value = window.__profileOriginal.name;
+                document.getElementById('profile-address').value = window.__profileOriginal.address;
+                profilePicture.src = window.__profileOriginal.picture;
+            }
+            // reset view/edit states
+            editProfileForm.classList.add('hidden');
+            viewProfileInfo.classList.remove('hidden');
+            saveChangesBtn.classList.add('hidden');
+
+            profileModal.querySelector('.modal-content')?.classList.replace('scale-100','scale-95');
+            setTimeout(()=> profileModal.classList.add('hidden'), 200);
+        }
+
+        profileButton?.addEventListener('click', openProfileModal);
+        desktopProfileButton?.addEventListener('click', openProfileModal);
+        profileModalCloseBtn?.addEventListener('click', ()=> closeProfileModal(true));
+        profileModal?.addEventListener('click', (e)=> { if (e.target === profileModal) closeProfileModal(true); });
+
+        // profile picture preview
+        profilePictureUpload?.addEventListener('change', (ev)=> {
+            const f = ev.target.files?.[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = (e)=> {
+                profilePicture.src = e.target.result;
+                if (desktopAvatar) desktopAvatar.src = e.target.result;
+                if (mobileAvatar) mobileAvatar.src = e.target.result;
+                saveChangesBtn.classList.remove('hidden');
+            };
+            reader.readAsDataURL(f);
+        });
+
+        // edit flow
+        editProfileBtn?.addEventListener('click', ()=> {
+            viewProfileInfo.classList.add('hidden');
+            editProfileForm.classList.remove('hidden');
+            saveChangesBtn.classList.remove('hidden');
+        });
+
+        cancelEditBtn?.addEventListener('click', ()=> {
+            // revert fields
+            if (window.__profileOriginal) {
+                document.getElementById('profile-name').value = window.__profileOriginal.name;
+                document.getElementById('profile-address').value = window.__profileOriginal.address;
+            }
+            editProfileForm.classList.add('hidden');
+            viewProfileInfo.classList.remove('hidden');
+            saveChangesBtn.classList.add('hidden');
+        });
+
+        applyEditBtn?.addEventListener('click', ()=> {
+            const newName = document.getElementById('profile-name').value;
+            const newAddress = document.getElementById('profile-address').value;
+            safeSetText('profile-display-name', newName);
+            safeSetText('profile-display-address', newAddress);
+            safeSetText('info-name', newName);
+            safeSetText('info-address', newAddress);
+            const desktopNameEl = document.getElementById('desktop-profile-name');
+            if (desktopNameEl) desktopNameEl.textContent = newName;
+            const mobileNameEl = document.getElementById('mobile-profile-name');
+            if (mobileNameEl) mobileNameEl.textContent = newName;
+
+            editProfileForm.classList.add('hidden');
+            viewProfileInfo.classList.remove('hidden');
+            saveChangesBtn.classList.remove('hidden');
+        });
+
+        saveChangesBtn?.addEventListener('click', ()=> {
+            // In demo: persist locally (update header avatars)
+            const newName = document.getElementById('profile-name').value;
+            const newAddress = document.getElementById('profile-address').value;
+            const newPicture = profilePicture.src;
+
+            if (desktopAvatar) desktopAvatar.src = newPicture;
+            if (mobileAvatar) mobileAvatar.src = newPicture;
+            const mpn = document.getElementById('mobile-profile-name'); if (mpn) mpn.textContent = newName;
+
+            if (document.getElementById('current-password').value && document.getElementById('new-password').value) {
+                alert('Password updated (demo).');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+            }
+
+            alert('Profile changes saved (demo).');
+            closeProfileModal(false);
+        });
+
+        document.getElementById('change-password-btn')?.addEventListener('click', ()=> {
+            const cur = document.getElementById('current-password').value;
+            const nw = document.getElementById('new-password').value;
+            if (!cur || !nw) { alert('Please provide both current and new passwords.'); return; }
+            alert('Password changed (demo).');
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+        });
+
+        // location modal handlers
+        allowLocationBtn?.addEventListener('click', ()=> {
+            if (!navigator.geolocation) {
+                locationDisplay.textContent = 'Geolocation not supported by this browser';
+                locationModal.classList.add('hidden');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos)=> {
+                window.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                locationDisplay.textContent = `Lat: ${pos.coords.latitude.toFixed(4)}, Lon: ${pos.coords.longitude.toFixed(4)}`;
+                locationModal.classList.add('hidden');
+                // If map exists, try to set center (map is created after Google API loads)
+                if (window.mapInstance && typeof window.mapInstance.setCenter === 'function') {
+                    window.mapInstance.setCenter(window.userLocation);
+                    window.mapInstance.setZoom(13);
+                }
+            }, (err)=> {
+                locationDisplay.textContent = 'Location access denied.';
+                locationModal.classList.add('hidden');
+            });
+        });
+
+        denyLocationBtn?.addEventListener('click', ()=> {
+            locationDisplay.textContent = 'Location access denied.';
+            locationModal.classList.add('hidden');
+        });
+
+        // click outside to close modals (already handled for info/profile)
+        document.addEventListener('keydown', (e)=> {
+            if (e.key === 'Escape') {
+                if (!infoModal.classList.contains('hidden')) hideDetailsModal();
+                if (!profileModal.classList.contains('hidden')) closeProfileModal(true);
+            }
+        });
+    }); // DOMContentLoaded
+    </script>
+
+    <script>
+      // initMap is defined in the Google script callback if maps load. Provide a safe init in case google isn't available.
+      function initMap() {
+        try {
+          const defaultLocation = { lat: 12.8231, lng: 80.0449 };
+          const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 12 });
+          window.mapInstance = map;
+
+          // Add demo circles for mockAlerts if desired (safe-guarded)
+          // (You can expand this to show markers from the mock data.)
+        } catch (err) {
+          console.warn('Google Maps failed to initialize:', err);
+        }
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZbZytf1rKZde4nV-oMVmzO9sVqi4Gsg0&callback=initMap" async defer></script>
+</body>
+</html>
