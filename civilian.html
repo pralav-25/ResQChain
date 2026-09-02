@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ResQChain — Fixed</title>
+    <title>ResQChain | Civilian Portal</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f5f5f4; }
@@ -784,10 +785,8 @@
                 window.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 locationDisplay.textContent = `Lat: ${pos.coords.latitude.toFixed(4)}, Lon: ${pos.coords.longitude.toFixed(4)}`;
                 locationModal.classList.add('hidden');
-                // If map exists, try to set center (map is created after Google API loads)
-                if (window.mapInstance && typeof window.mapInstance.setCenter === 'function') {
-                    window.mapInstance.setCenter(window.userLocation);
-                    window.mapInstance.setZoom(13);
+                if (window.mapInstance && typeof window.mapInstance.setView === 'function') {
+                    window.mapInstance.setView([window.userLocation.lat, window.userLocation.lng], 13);
                 }
             }, (err)=> {
                 locationDisplay.textContent = 'Location access denied.';
@@ -820,41 +819,44 @@
     }); // DOMContentLoaded
     </script>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      // initMap is defined in the Google script callback.
       function initMap() {
         try {
           const defaultLocation = { lat: 12.8231, lng: 80.0449 };
-          const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 12 });
+          const map = L.map("map").setView([defaultLocation.lat, defaultLocation.lng], 12);
           window.mapInstance = map;
 
-          // Define colors for severity levels
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(map);
+
           const severityColors = {
-              'High': '#FF0000',     // red
-              'Moderate': '#FFA500', // orange
-              'Low': '#FFFF00'      // yellow
+              'High': '#DC2626',
+              'Moderate': '#F59E0B',
+              'Low': '#EAB308'
           };
 
-          // Draw circular danger zones for each alert
           mockAlerts.forEach(alert => {
-              const alertCircle = new google.maps.Circle({
-                  strokeColor: severityColors[alert.severity] || '#808080', // default to gray
-                  strokeOpacity: 0.8,
-                  strokeWeight: 2,
-                  fillColor: severityColors[alert.severity] || '#808080',
+              const color = severityColors[alert.severity] || '#6B7280';
+              L.circle([alert.position.lat, alert.position.lng], {
+                  color,
+                  weight: 2,
+                  opacity: 0.8,
+                  fillColor: color,
                   fillOpacity: 0.35,
-                  map,
-                  center: alert.position,
                   radius: alert.radius
-              });
+              }).addTo(map);
           });
 
         } catch (err) {
-          console.warn('Google Maps failed to initialize:', err);
+          console.warn('Map failed to initialize:', err);
           document.getElementById('map').innerHTML = `<div class="w-full h-full bg-gray-300 flex items-center justify-center"><p class="text-gray-600">Map could not be loaded.</p></div>`;
         }
       }
+
+      initMap();
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZbZytf1rKZde4nV-oMVmzO9sVqi4Gsg0&callback=initMap" async defer></script>
 </body>
 </html>
