@@ -22,6 +22,7 @@
     </style>
 </head>
 <body class="bg-stone-100">
+    <aside role="note" style="position:relative;z-index:60;padding:12px 20px;background:#172554;color:#fff;text-align:center;font:14px/1.5 system-ui">Demonstration only. Alerts, facilities, and requests are simulated. This site does not contact emergency services.</aside>
 
     <header class="bg-white/80 backdrop-blur-md shadow-md fixed w-full top-0 z-50">
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center relative">
@@ -117,7 +118,7 @@
             <div class="absolute inset-0 bg-black opacity-50"></div>
             <div class="container mx-auto px-6 relative z-10">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-white">Live Alerts & Safe Zones</h2>
+                    <h2 class="text-3xl font-bold text-white">Demo Alerts & Safe Zones</h2>
                     <p class="text-stone-300 mt-2">Current location: <span id="location-display" class="font-semibold text-amber-400">Awaiting Access...</span></p>
                 </div>
                 <div class="flex flex-col lg:flex-row gap-8">
@@ -545,7 +546,7 @@
             if (!container) return;
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center';
-            row.innerHTML = `<input class="flex-1 p-2.5 border rounded" placeholder="Item name"><input type="number" min="1" class="w-24 p-2.5 border rounded" placeholder="Qty"><button type="button" class="text-red-500 remove">×</button>`;
+            row.innerHTML = `<input class="flex-1 p-2.5 border rounded" placeholder="Item name" aria-label="Requested item" required maxlength="100"><input type="number" min="1" class="w-24 p-2.5 border rounded" placeholder="Qty" aria-label="Quantity" required step="1" max="10000"><button type="button" class="text-red-500 remove" aria-label="Remove item">×</button>`;
             container.appendChild(row);
             row.querySelector('.remove').addEventListener('click', ()=> row.remove());
         }
@@ -556,7 +557,7 @@
             const btn = e.target.querySelector('button[type="submit"]');
             if (btn) {
                 const orig = btn.innerHTML;
-                btn.textContent = 'Submitted!';
+                btn.textContent = 'Demo complete — no request sent';
                 btn.disabled = true;
                 setTimeout(()=> { btn.innerHTML = orig; btn.disabled = false; e.target.reset(); const dyn = e.target.querySelector('.space-y-2'); if(dyn) dyn.innerHTML=''; }, 1500);
             }
@@ -567,7 +568,7 @@
             'how do i find a nearby shelter?': 'Go to the Shelter section and click a card for details.',
             'what is the weather forecast?': "You can find a detailed 10-day forecast in the 'Weather' section of the page.",
             'how can i request medical supplies?': "Please use the 'Medical Needs' form in the 'Request Assistance' section to request specific medical items.",
-            'are there any flood warnings?': "Check the 'Live Alerts & Safe Zones' section for real-time warnings and information specific to your area.",
+            'are there any flood warnings?': "Check the 'Demo Alerts & Safe Zones' section for simulated alerts used to demonstrate the interface.",
             'show me the nearest hospital.': "The 'Nearby Hospitals' section lists medical facilities. Click on any hospital to see details and get directions.",
             'what is resqchain?': 'ResQChain is a disaster management hub.',
             'what should i do during a flood?': 'Move to higher ground and follow local instructions.',
