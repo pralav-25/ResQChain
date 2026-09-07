@@ -126,6 +126,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap">
 </head>
 <body class="font-sans">
+    <aside role="note" style="position:relative;z-index:60;padding:12px 20px;background:#172554;color:#fff;text-align:center;font:14px/1.5 system-ui">Demonstration only. Alerts, facilities, and requests are simulated. This site does not contact emergency services.</aside>
 
     <div id="loading-screen" class="fixed inset-0 bg-primary-bg flex flex-col items-center justify-center z-50 transition-opacity duration-500">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent"></div>
@@ -916,7 +917,7 @@
                      body: JSON.stringify({ message: message }),
                      // apiKey: MONGO_API_KEY // Removed
                  });
-                 if (response.ok) { showMessage("CRITICAL ALERT broadcast successfully!"); document.getElementById('alert-message').value = ''; } 
+                 if (response.ok) { showMessage("Demo alert updated in this browser session. No public alert was sent."); document.getElementById('alert-message').value = ''; }
                  else { const errorJson = await response.json(); showMessage(`Alert broadcast failed: ${errorJson.error || 'Mock API Error'}`); }
              } catch (error) {
                  console.error("Network Error during alert broadcast:", error);
@@ -1001,78 +1002,5 @@
         }
 
     </script>
-<script>
-  async function loadShelterStatus() {
-    const userId = 'test-shelter';
-    try {
-      const response = await fetch(`http://localhost:3000/provider/status/${userId}`);
-      const data = await response.json();
-      document.getElementById('display-status').textContent = data.status || 'Unknown';
-      document.getElementById('display-capacity').textContent = data.capacity;
-      document.getElementById('status').value = data.status;
-      document.getElementById('capacity').value = data.capacity;
-    } catch (error) {
-      document.getElementById('display-status').textContent = 'Error';
-      document.getElementById('display-capacity').textContent = 'Error';
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', loadShelterStatus);
-
-  document.getElementById('status-capacity-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const status = document.getElementById('status').value;
-    const capacity = parseInt(document.getElementById('capacity').value, 10);
-    const userId = 'test-shelter';
-    try {
-      const response = await fetch(`http://localhost:3000/provider/status/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, capacity })
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert('Shelter status updated successfully!');
-        await loadShelterStatus();
-      } else {
-        alert('Update failed: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      alert('Network error: ' + error);
-    }
-  });
-</script>
-<script>
-document.getElementById('inventory-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  const items = [
-    { name: 'Water Bottles', quantity: parseInt(document.getElementById('water').value, 10), unit: 'bottles' },
-    { name: 'Ready-to-Eat Meals', quantity: parseInt(document.getElementById('meals').value, 10), unit: 'meals' },
-    { name: 'Fuel', quantity: parseInt(document.getElementById('fuel').value, 10), unit: 'liters' },
-    { name: 'First Aid Kits', quantity: parseInt(document.getElementById('medicalkits').value, 10), unit: 'kits' }
-  ];
-
-  const userId = 'test-shelter'; // Use your unique facility ID if needed
-
-  try {
-    const response = await fetch(`http://localhost:3000/provider/inventory/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items })
-    });
-    const data = await response.json();
-    if (response.ok) {
-      alert('Inventory updated successfully!');
-    } else {
-      alert('Update failed: ' + (data.error || 'Unknown error'));
-    }
-  } catch (error) {
-    alert('Network error: ' + error);
-  }
-});
-</script>
-
-
 </body>
 </html>
