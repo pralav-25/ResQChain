@@ -43,7 +43,7 @@ emergency service.
 The shelter portal uses its bundled in-memory mock API. Capacity, inventory,
 requests, and alerts reset when the page reloads. No localhost backend is needed.
 The civilian forms demonstrate validation and feedback; submissions are not
-transmitted. An always-visible notice identifies the demo on every portal.
+transmitted. A prominent notice identifies the demo on every portal.
 
 ## Validation
 
