@@ -17,3 +17,4 @@ jobs:
         with:
           node-version: 22
       - run: python scripts/check_site.py
+      - run: node --test tests/*.test.mjs

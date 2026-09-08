@@ -50,3 +50,12 @@ transmitted. A prominent notice identifies the demo on every portal.
 With Python 3 and Node.js installed, run `python3 scripts/check_site.py`.
 GitHub Actions checks page resources, fragments, duplicate IDs, and inline
 JavaScript syntax. There are no live emergency-service integrations to test.
+
+## Shelter demo
+
+The shelter page supports capacity and inventory edits, profile changes, local
+practice alerts, and the request packing/delivery cycle. State belongs to the
+current tab and resets on reload; no backend or emergency service is contacted.
+Polling preserves unsaved form edits. Invalid quantities are rejected.
+
+Run `node --test tests/*.test.mjs` to verify the demo state transitions.

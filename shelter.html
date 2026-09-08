@@ -338,14 +338,15 @@
             </section>
         </main>
 
-        <div id="message-box" class="fixed bottom-4 right-4 p-3 rounded-lg text-sm bg-accent text-white shadow-xl opacity-0 transition-opacity duration-300"></div>
+        <div id="message-box" role="status" aria-live="polite" class="fixed bottom-4 right-4 p-3 rounded-lg text-sm bg-accent text-white shadow-xl opacity-0 transition-opacity duration-300"></div>
 
     </div>
 
     <script type="module">
+        import { createDemoApi } from "./scripts/demo-api.mjs";
         // Global Variables (Simulated for REST API client)
-        const appId = 'resqchain-app-v1';
-        const userId = crypto.randomUUID(); // Mock user ID for local storage keying
+
+        const userId = crypto.randomUUID(); // Isolated demo identity for this page load
         const API_BASE_URL = '/api/v1'; // Simulated base URL for fetch calls
         const POLLING_INTERVAL = 3000; // 3 seconds for mock real-time updates
         
@@ -363,12 +364,6 @@
             // NEW: Facility Address
             facilityAddress: 'SRMIST, KATHANKULATHUR, TAMIL NADU'
         };
-        const INITIAL_ALERT = { message: '', isActive: false, timestamp: null };
-
-        // const LOCAL_STORAGE_KEY = `resqchain_provider_data_${userId}_${appId}`;
-        const LOCAL_STORAGE_ALERT_KEY = `resqchain_alert_data_${appId}`;
-        const LOCAL_STORAGE_REQUESTS_KEY = `resqchain_requests_data_${appId}`;
-        
         // --- DOM Elements ---
         const loadingScreen = document.getElementById('loading-screen');
         const appContainer = document.getElementById('app-container');
@@ -422,137 +417,22 @@
 
         // --- MOCK REST API IMPLEMENTATION (Simulates MongoDB backend via Express/Node) ---
 
-        // Helper to get data from mock DB (localStorage)
-        function getMockData(key, defaultData) {
-            const data = localStorage.getItem(key);
-            if (!data) {
-                // Initialize if not present
-                // localStorage.setItem(key, JSON.stringify(defaultData));
-                return defaultData;
-            }
-            return JSON.parse(data);
+        const demoApi = createDemoApi(INITIAL_DATA);
+        function simulateFetch(url, options = {}) {
+            return demoApi(url.replace(API_BASE_URL, ''), options);
         }
 
-        // Helper to save data to mock DB (localStorage)
-        function setMockData(key, data) {
-            // localStorage.setItem(key, JSON.stringify(data));
-        }
-        
-        /**
-         * Simulates a network fetch request to a REST API.
-         */
-        async function simulateFetch(url, options = {}) {
-            // Mock API Key Check
-            /*
-            if (!options.apiKey || options.apiKey !== MONGO_API_KEY) {
-                 await new Promise(resolve => setTimeout(resolve, 100));
-                 return {
-                     ok: false,
-                     status: 401,
-                     json: () => Promise.resolve({ error: 'Authentication Failed: Invalid/Missing API Key.' })
-                 };
-            }
-            */
-            
-            // Mock network latency
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 100)); 
-            
-            const method = options.method || 'GET';
-            const path = url.replace(API_BASE_URL, '');
-            const body = options.body ? JSON.parse(options.body) : {};
-            let responseData = null;
-            let status = 200;
-            /*
-            try {
-                if (path.startsWith('/provider/status') && method === 'GET') {
-                    responseData = getMockData(LOCAL_STORAGE_KEY, INITIAL_DATA);
-                    
-                } else if (path.startsWith('/provider/status') && (method === 'POST' || method === 'PUT')) {
-                    let currentData = getMockData(LOCAL_STORAGE_KEY, INITIAL_DATA);
-                    currentData = {
-                        ...currentData,
-                        ...body,
-                        inventory: { ...currentData.inventory, ...(body.inventory || {}) },
-                        lastUpdated: new Date().toISOString()
-                    };
-                    setMockData(LOCAL_STORAGE_KEY, currentData);
-                    responseData = { success: true, data: currentData };
-                
-                } else if (path.startsWith('/global/alert') && method === 'GET') {
-                    responseData = getMockData(LOCAL_STORAGE_ALERT_KEY, INITIAL_ALERT);
-
-                } else if (path.startsWith('/global/alert') && (method === 'POST' || method === 'PUT')) {
-                    // Alert data needs to be constructed properly for persistence
-                    const alertData = {
-                        message: body.message,
-                        isActive: !!body.message, // True if message is present
-                        timestamp: new Date().toISOString()
-                    };
-                    setMockData(LOCAL_STORAGE_ALERT_KEY, alertData);
-                    responseData = { success: true, data: alertData };
-                
-                // --- AID REQUESTS API ENDPOINTS ---
-                } else if (path.startsWith('/requests') && method === 'GET') {
-                    // GET /api/v1/requests - Get all requests
-                    responseData = getMockData(LOCAL_STORAGE_REQUESTS_KEY, []);
-                    
-                } else if (path.startsWith('/requests/add_demo') && method === 'POST') {
-                    // POST /api/v1/requests/add_demo - Add a new demo request
-                    let requests = getMockData(LOCAL_STORAGE_REQUESTS_KEY, []);
-                    requests.unshift(body); // Add to the start
-                    setMockData(LOCAL_STORAGE_REQUESTS_KEY, requests);
-                    responseData = { success: true };
-                
-                } else if (path.startsWith('/requests/update') && method === 'PUT') {
-                    // PUT /api/v1/requests/update - Update a request's status/delivery
-                    let requests = getMockData(LOCAL_STORAGE_REQUESTS_KEY, []);
-                    const index = requests.findIndex(req => req.id === body.id);
-                    if (index !== -1) {
-                        requests[index] = { ...requests[index], ...body.updates };
-                        setMockData(LOCAL_STORAGE_REQUESTS_KEY, requests);
-                        responseData = { success: true, data: requests[index] };
-                    } else {
-                         status = 404;
-                         responseData = { error: 'Request ID not found.' };
-                    }
-                } else if (path.startsWith('/requests/delete/') && method === 'DELETE') {
-                    // DELETE /api/v1/requests/delete/{id} - Delete a request
-                    const idToDelete = path.substring(path.lastIndexOf('/') + 1);
-                    let requests = getMockData(LOCAL_STORAGE_REQUESTS_KEY, []);
-                    const initialLength = requests.length;
-                    requests = requests.filter(req => req.id !== idToDelete);
-                    
-                    if (requests.length < initialLength) {
-                        setMockData(LOCAL_STORAGE_REQUESTS_KEY, requests);
-                        responseData = { success: true };
-                    } else {
-                        status = 404;
-                        responseData = { error: 'Request ID not found for deletion.' };
-                    }
-                }
-                
-                else {
-                    status = 404;
-                    responseData = { error: 'Not Found' };
-                }
-            } catch (error) {
-                console.error('Mock API Error:', error);
-                status = 500;
-                responseData = { error: 'Internal Server Error' };
-            }
-
-            return {
-                ok: status >= 200 && status < 300,
-                status: status,
-                json: () => Promise.resolve(responseData)
-            };
-            */
-            // Since the mock functions are removed, return a generic failure for all calls
-            return {
-                ok: false,
-                status: 501,
-                json: () => Promise.resolve({ error: 'Mock API Disabled' })
-            };
+        const editableForms = ['status-capacity-form', 'inventory-form', 'profile-form'];
+        editableForms.forEach(id => {
+            document.getElementById(id).addEventListener('input', event => {
+                const form = event.currentTarget;
+                form.dataset.dirty = 'true';
+                form.dataset.revision = String(Number(form.dataset.revision || 0) + 1);
+            });
+        });
+        function refreshField(id, value) {
+            const input = document.getElementById(id);
+            if (input.closest('form')?.dataset.dirty !== 'true') input.value = value;
         }
 
         // --- Request Action Functions ---
@@ -859,19 +739,19 @@
              const capacityInput = document.getElementById('capacity');
              const statusSelect = document.getElementById('status');
              const status = statusSelect.value;
-             const capacity = parseInt(capacityInput.value, 10);
-             if (isNaN(capacity) || capacity < 0) { showMessage("Capacity must be a non-negative number."); return; }
-             updateShelterData({ status: status, capacity: capacity });
+             const capacity = Number(capacityInput.value);
+             if (!Number.isSafeInteger(capacity) || capacity < 0) { showMessage("Capacity must be a non-negative number."); return; }
+             updateShelterData({ status: status, capacity: capacity }, e.currentTarget);
          });
          
         document.getElementById('inventory-form').addEventListener('submit', (e) => {
              e.preventDefault();
              // Logic retained from previous version
-             const water = parseInt(document.getElementById('water').value, 10) || 0;
-             const meals = parseInt(document.getElementById('meals').value, 10) || 0;
-             const fuel = parseInt(document.getElementById('fuel').value, 10) || 0; 
-             const medical_kits = parseInt(document.getElementById('medical_kits').value, 10) || 0;
-             updateShelterData({ inventory: { water_bottles: water, meals_ready: meals, fuel: fuel, medical_kits: medical_kits }});
+             const water = Number(document.getElementById('water').value);
+             const meals = Number(document.getElementById('meals').value);
+             const fuel = Number(document.getElementById('fuel').value);
+             const medical_kits = Number(document.getElementById('medical_kits').value);
+             updateShelterData({ inventory: { water_bottles: water, meals_ready: meals, fuel: fuel, medical_kits: medical_kits }}, e.currentTarget);
          });
          
          document.getElementById('profile-form').addEventListener('submit', (e) => {
@@ -890,17 +770,22 @@
                  facilityName: facilityName, 
                  facilityAddress: facilityAddress, 
                  contactInfo: contactInfo 
-             });
+             }, e.currentTarget);
          });
 
-        async function updateShelterData(data) {
+        async function updateShelterData(data, form) {
+             const revision = form?.dataset.revision;
              try {
                  const response = await simulateFetch(`${API_BASE_URL}/provider/status/${userId}`, {
                      method: 'PUT',
                      body: JSON.stringify(data),
                      // apiKey: MONGO_API_KEY // Removed
                  });
-                 if (response.ok) { showMessage("Data successfully saved via Mock API!"); } 
+                 if (response.ok) {
+                     if (form && form.dataset.revision === revision) form.dataset.dirty = 'false';
+                     await fetchAndRenderData();
+                     showMessage("Saved in this demo tab. Reloading resets the demo.");
+                 }
                  else { const errorJson = await response.json(); showMessage(`Save failed: ${errorJson.error || 'Mock API Error'}`); }
              } catch (error) {
                  console.error("Network Error during update:", error);
@@ -946,13 +831,13 @@
                 displayStatus.textContent = statusText;
                 displayStatus.className = 'text-2xl font-bold mt-1 ' + (statusText === 'Operational' ? 'text-green-600' : statusText === 'Limited Capacity' ? 'text-yellow-700' : statusText === 'Critical' ? 'text-red-700' : 'text-gray-500');
                 displayCapacity.textContent = data.capacity !== undefined ? `${data.capacity} Available` : 'N/A';
-                capacityInput.value = data.capacity !== undefined ? data.capacity : '';
-                statusSelect.value = statusText;
+                refreshField('capacity', data.capacity ?? '');
+                refreshField('status', statusText);
                 if (data.inventory) {
-                    document.getElementById('water').value = data.inventory.water_bottles || 0;
-                    document.getElementById('meals').value = data.inventory.meals_ready || 0;
-                    document.getElementById('fuel').value = data.inventory.fuel || 0;
-                    document.getElementById('medical_kits').value = data.inventory.medical_kits || 0;
+                    refreshField('water', data.inventory.water_bottles || 0);
+                    refreshField('meals', data.inventory.meals_ready || 0);
+                    refreshField('fuel', data.inventory.fuel || 0);
+                    refreshField('medical_kits', data.inventory.medical_kits || 0);
                 }
                 if (data.lastUpdated) {
                     const date = new Date(data.lastUpdated);
@@ -961,10 +846,10 @@
                 
                 // --- Profile Updates (New) ---
                 displayFacilityNameSpan.textContent = data.facilityName || 'Provider Facility';
-                document.getElementById('facility-name').value = data.facilityName || '';
-                document.getElementById('contact-info').value = data.contactInfo || '';
+                refreshField('facility-name', data.facilityName || '');
+                refreshField('contact-info', data.contactInfo || '');
                 // NEW: Populate facility address field
-                document.getElementById('facility-address').value = data.facilityAddress || ''; 
+                refreshField('facility-address', data.facilityAddress || '');
 
             } catch (error) {
                 console.error("Error fetching shelter data via Mock API:", error);
