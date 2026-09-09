@@ -32,6 +32,18 @@ python3 -m http.server 8000
 
 Then open `http://localhost:8000`.
 
+## Try the portals
+
+After starting the local server, open [index.html](index.html) to choose a role,
+or go directly to [civilian.html](civilian.html) or [shelter.html](shelter.html).
+
+In the shelter portal, change capacity or an inventory quantity and save it.
+Try a negative quantity to see validation, then enter a non-negative whole
+number. Reload the page to return to the initial demonstration data.
+
+The portals do not share a live backend. An edit in one tab will not synchronize
+to another tab or send assistance requests to a real shelter.
+
 ## Scope and data
 
 This repository is a front-end prototype. Alerts, forecasts, facility details,
