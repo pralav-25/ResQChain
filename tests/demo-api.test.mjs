@@ -37,3 +37,22 @@ test('alerts remain inside the demo instance', async () => {
   assert.equal((await (await api('/global/alert')).json()).message, 'Practice alert');
   assert.equal((await (await createDemoApi(initial)('/global/alert')).json()).isActive, false);
 });
+
+test('malformed inventory updates reject the entire edit without changing state', async () => {
+  const api = createDemoApi(initial);
+  const before = await (await api('/provider/status/demo')).json();
+  for (const inventory of [[1, 2], [], null, 'water', 5, true,
+    { water_bottles: -1 }, { water_bottles: 1.5 }, { water_bottles: '3' },
+    { water_bottles: null }, { water_bottles: Number.MAX_SAFE_INTEGER + 1 }]) {
+    const response = await api('/provider/status/demo', write('PUT', { capacity: 7, inventory }));
+    assert.equal(response.status, 422, JSON.stringify(inventory));
+    assert.equal(response.ok, false);
+    assert.deepEqual(await (await api('/provider/status/demo')).json(), before);
+  }
+  assert.equal((await api('/provider/status/demo', write('PUT', { inventory: { water_bottles: 0 } }))).status, 200);
+  const after = await (await api('/provider/status/demo')).json();
+  assert.deepEqual(after.inventory, { water_bottles: 0, meals_ready: 250 });
+  assert.equal(after.capacity, initial.capacity);
+  assert.equal((await api('/provider/status/demo', write('PUT', { capacity: 7 }))).status, 200);
+  assert.deepEqual((await (await api('/provider/status/demo')).json()).inventory, after.inventory);
+});

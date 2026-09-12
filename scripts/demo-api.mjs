@@ -15,7 +15,7 @@ export function createDemoApi(initialData) {
       if (method === 'GET') return reply(200, provider);
       if (method === 'PUT') {
         if ((body.capacity !== undefined && (!Number.isSafeInteger(body.capacity) || body.capacity < 0)) ||
-            (body.inventory !== undefined && (!body.inventory || typeof body.inventory !== 'object' ||
+            (body.inventory !== undefined && (!body.inventory || typeof body.inventory !== 'object' || Array.isArray(body.inventory) ||
               Object.values(body.inventory).some(value => !Number.isSafeInteger(value) || value < 0)))) {
           return reply(422, { error: 'Capacity and inventory must be non-negative whole numbers.' });
         }
