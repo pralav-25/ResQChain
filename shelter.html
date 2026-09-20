@@ -233,6 +233,11 @@
                  <h2 class="text-3xl font-bold text-accent mb-6">Resource Inventory</h2>
                  <div class="p-6 card-panel rounded-xl">
                     <h3 class="text-xl font-semibold mb-4 text-accent">Stock Management</h3>
+                    <div class="mb-6">
+                      <h4 class="font-semibold">Restock planner</h4>
+                      <p class="text-sm mb-3">Saved stock compared with all undelivered demo requests, including packed requests. This preview does not reserve or deduct inventory.</p>
+                      <div id="supply-plan" class="space-y-2" aria-live="polite"></div>
+                    </div>
                     <form id="inventory-form" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -344,6 +349,7 @@
 
     <script type="module">
         import { createDemoApi } from "./scripts/demo-api.mjs";
+        import { supplyPlan } from "./scripts/supply-plan.mjs";
         // Global Variables (Simulated for REST API client)
 
         const userId = crypto.randomUUID(); // Isolated demo identity for this page load
@@ -364,6 +370,23 @@
             // NEW: Facility Address
             facilityAddress: 'SRMIST, KATHANKULATHUR, TAMIL NADU'
         };
+        let savedInventory = { ...INITIAL_DATA.inventory };
+        let currentRequests = [];
+        let lastSupplyPlan = '';
+        function renderSupplyPlan() {
+            const container = document.getElementById('supply-plan');
+            const rows = supplyPlan(savedInventory, currentRequests);
+            const snapshot = JSON.stringify(rows);
+            if (snapshot === lastSupplyPlan) return;
+            lastSupplyPlan = snapshot;
+            container.replaceChildren();
+            for (const row of rows) {
+                const item = document.createElement('p');
+                item.className = 'p-3 rounded-lg border ' + (row.shortage ? 'border-red-500' : 'border-green-600');
+                item.textContent = `${row.name}: ${row.available} in stock · ${row.needed} requested · ${row.shortage} to restock`;
+                container.appendChild(item);
+            }
+        }
         // --- DOM Elements ---
         const loadingScreen = document.getElementById('loading-screen');
         const appContainer = document.getElementById('app-container');
@@ -558,6 +581,8 @@
         // --- UI Rendering Functions ---
 
         function renderRequests(requests) {
+            currentRequests = requests;
+            renderSupplyPlan();
             requestsList.innerHTML = '';
             
             if (requests.length === 0) {
@@ -834,6 +859,8 @@
                 refreshField('capacity', data.capacity ?? '');
                 refreshField('status', statusText);
                 if (data.inventory) {
+                    savedInventory = { ...data.inventory };
+                    renderSupplyPlan();
                     refreshField('water', data.inventory.water_bottles || 0);
                     refreshField('meals', data.inventory.meals_ready || 0);
                     refreshField('fuel', data.inventory.fuel || 0);
