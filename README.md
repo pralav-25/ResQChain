@@ -71,3 +71,11 @@ current tab and resets on reload; no backend or emergency service is contacted.
 Polling preserves unsaved form edits. Invalid quantities are rejected.
 
 Run `node --test tests/*.test.mjs` to verify the demo state transitions.
+
+## Restock planner
+
+The shelter inventory view compares saved stock with undelivered demo requests
+for water, meals, first-aid kits, and fuel. It displays available stock, requested
+quantities, and any shortfall, updating after inventory saves and request changes.
+Packed requests remain included until delivered. Unsaved form edits do not alter
+the plan. This is a planning preview; it does not reserve or deduct stock.
