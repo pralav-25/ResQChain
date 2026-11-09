@@ -71,3 +71,7 @@ current tab and resets on reload; no backend or emergency service is contacted.
 Polling preserves unsaved form edits. Invalid quantities are rejected.
 
 Run `node --test tests/*.test.mjs` to verify the demo state transitions.
+
+`scripts/request-data.mjs` defines the queue's request and status-update validation.
+Item quantities must be positive safe whole numbers; malformed requests are rejected
+before they can change the queue. Omitted display fields and statuses receive demo defaults.

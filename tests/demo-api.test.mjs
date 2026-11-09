@@ -56,3 +56,35 @@ test('malformed inventory updates reject the entire edit without changing state'
   assert.equal((await api('/provider/status/demo', write('PUT', { capacity: 7 }))).status, 200);
   assert.deepEqual((await (await api('/provider/status/demo')).json()).inventory, after.inventory);
 });
+
+test('malformed request items and display fields never enter the queue', async () => {
+  const api = createDemoApi(initial);
+  const valid = { id: 'request-1', items: [{ name: 'Water', quantity: 5 }] };
+  const invalid = [
+    { ...valid, id: '  ' }, { ...valid, needyName: {} }, { ...valid, status: 'Unknown' },
+    { ...valid, deliveryStatus: null },
+    ...[null, {}, { name: ' ', quantity: 5 },
+      ...['5', -1, 0, 1.5, null, Number.MAX_SAFE_INTEGER + 1].map(quantity => ({ name: 'Water', quantity }))]
+      .map(item => ({ ...valid, items: [item] })),
+  ];
+  for (const request of invalid) {
+    assert.equal((await api('/requests/add_demo', write('POST', request))).status, 422);
+    assert.deepEqual(await (await api('/requests')).json(), []);
+  }
+  assert.equal((await api('/requests/add_demo', write('POST', valid))).status, 201);
+  const [stored] = await (await api('/requests')).json();
+  assert.equal(stored.status, 'Pending');
+  assert.equal(stored.deliveryStatus, 'Not Sent');
+  assert.equal(typeof stored.needyName, 'string');
+  assert.equal(stored.items[0].quantity + 2, 7);
+});
+
+test('status patches must be objects and leave the whole request unchanged on failure', async () => {
+  const api = createDemoApi(initial);
+  await api('/requests/add_demo', write('POST', { id: 'request-1', items: [] }));
+  const before = await (await api('/requests')).json();
+  for (const updates of [[], null, 'Packed', { status: 'Packed', deliveryStatus: 'invalid' }]) {
+    assert.equal((await api('/requests/update', write('PUT', { id: 'request-1', updates }))).status, 422);
+    assert.deepEqual(await (await api('/requests')).json(), before);
+  }
+});
