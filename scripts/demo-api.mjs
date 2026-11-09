@@ -1,4 +1,6 @@
 // A deliberately local simulation. Each page load starts an isolated workspace.
+import { normalizeAidRequest, validStatusPatch } from './request-data.mjs';
+
 export function createDemoApi(initialData) {
   let provider = structuredClone(initialData);
   let alert = { message: '', isActive: false, timestamp: null };
@@ -33,18 +35,17 @@ export function createDemoApi(initialData) {
     }
     if (path === '/requests' && method === 'GET') return reply(200, requests);
     if (path === '/requests/add_demo' && method === 'POST') {
-      if (typeof body.id !== 'string' || !Array.isArray(body.items)) return reply(422, { error: 'Invalid demo request.' });
-      if (requests.some(item => item.id === body.id)) return reply(409, { error: 'Request already exists.' });
-      requests.unshift(structuredClone(body));
+      const request = normalizeAidRequest(body);
+      if (!request) return reply(422, { error: 'Invalid demo request.' });
+      if (requests.some(item => item.id === request.id)) return reply(409, { error: 'Request already exists.' });
+      requests.unshift(structuredClone(request));
       return reply(201, { success: true });
     }
     if (path === '/requests/update' && method === 'PUT') {
       const request = requests.find(item => item.id === body.id);
       if (!request) return reply(404, { error: 'Request not found.' });
       const updates = body.updates;
-      if (!updates || typeof updates !== 'object' ||
-          (updates.status !== undefined && !['Pending', 'In Process', 'Packed'].includes(updates.status)) ||
-          (updates.deliveryStatus !== undefined && !['Not Sent', 'In Transit', 'Delivered'].includes(updates.deliveryStatus))) {
+      if (!validStatusPatch(updates)) {
         return reply(422, { error: 'Invalid request status.' });
       }
       for (const key of ['status', 'deliveryStatus']) if (updates[key] !== undefined) request[key] = updates[key];
