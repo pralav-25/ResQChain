@@ -560,7 +560,12 @@
                 const orig = btn.innerHTML;
                 btn.textContent = 'Demo complete — no request sent';
                 btn.disabled = true;
-                setTimeout(()=> { btn.innerHTML = orig; btn.disabled = false; e.target.reset(); const dyn = e.target.querySelector('.space-y-2'); if(dyn) dyn.innerHTML=''; }, 1500);
+                // Clear the completed demo immediately so the delayed feedback cannot
+                // erase a new request the user starts typing during the next 1.5 seconds.
+                e.target.reset();
+                const dyn = e.target.querySelector('.space-y-2');
+                if (dyn) dyn.replaceChildren();
+                setTimeout(()=> { btn.innerHTML = orig; btn.disabled = false; }, 1500);
             }
         }
 
